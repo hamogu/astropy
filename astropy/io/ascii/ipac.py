@@ -196,6 +196,11 @@ class IpacHeader(fixedwidth.FixedWidthHeader):
                 null = header_vals[3][i].strip()
                 fillval = '' if issubclass(col.type, core.StrType) else '0'
                 self.data.fill_values.append((null, fillval, col.name))
+                # see numpy/numpy/#3213
+                try: 
+                    col.data.set_fill_value(null)
+                except TypeError, OverflowError:
+                    pass
             start = col.end + 1
             cols.append(col)
 
@@ -300,11 +305,11 @@ class IpacData(fixedwidth.FixedWidthData):
 
 
     def str_vals(self):
-        '''return str vals for each in the table'''
+        '''return str vals for each row in the table'''
         vals_list = []
         # just to make sure
         self._set_col_formats()
-        col_str_iters = [col.iter_str_vals() for col in self.cols]
+        col_str_iters = [col.filled().iter_str_vals() for col in self.cols]
         for vals in zip(*col_str_iters):
             vals_list.append(vals)
 
