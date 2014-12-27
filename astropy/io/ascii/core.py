@@ -749,6 +749,17 @@ class TableOutputter(BaseOutputter):
         for col, out_col in zip(cols, out.columns.values()):
             if masked and hasattr(col, 'mask'):
                 out_col.data.mask = col.mask
+                if hasattr(col, 'null_value'):
+                    # A column can have many fill_values, so it is not 
+                    # clear with one to use here. Thus, set the numpy
+                    # fill_value only if explicitly given as null_value.
+                    try:
+                        # Try if the same converter used for the data values
+                        # will also work for the null_value
+                        converter = col.converters[0][0]
+                        out_col.set_fill_value(converter(col.null_value))
+                    except:
+                        pass
             for attr in ('format', 'unit', 'description'):
                 if hasattr(col, attr):
                     setattr(out_col, attr, getattr(col, attr))

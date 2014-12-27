@@ -194,13 +194,8 @@ class IpacHeader(fixedwidth.FixedWidthHeader):
                 # Strip spaces but not dashes (not allowed in NULL row per
                 # https://github.com/astropy/astropy/issues/361)
                 null = header_vals[3][i].strip()
-                fillval = '' if issubclass(col.type, core.StrType) else '0'
-                self.data.fill_values.append((null, fillval, col.name))
-                # see numpy/numpy/#3213
-                try: 
-                    col.data.set_fill_value(null)
-                except TypeError, OverflowError:
-                    pass
+                self.data.fill_values.append((null, '0', col.name))
+                col.null_value = null
             start = col.end + 1
             cols.append(col)
 
@@ -212,8 +207,6 @@ class IpacHeader(fixedwidth.FixedWidthHeader):
 
         self.names = [x.name for x in cols]
         self.cols = cols
-
-
 
     def str_vals(self):
 
@@ -270,7 +263,7 @@ class IpacHeader(fixedwidth.FixedWidthHeader):
                 format_func = _format_funcs.get(col.format, _auto_format_func)
                 nullist.append((format_func(col.format, null)).strip())
             except:
-                # It is pssible that null and the column values have different
+                # It is possible that null and the column values have different
                 # data types (e.g. number und null = 'null' (i.e. a string).
                 # This could cause all kinds of exceptions, so a catch all
                 # block is needed here
@@ -302,7 +295,6 @@ class IpacData(fixedwidth.FixedWidthData):
     comment = r'[|\\]'
     start_line = 0
     splitter_class = IpacDataSplitter
-
 
     def str_vals(self):
         '''return str vals for each row in the table'''
@@ -416,7 +408,6 @@ class Ipac(basic.Basic):
         else:
             raise ValueError("definition should be one of ignore/left/right")
         self.header.DBMS = DBMS
-
 
     def write(self, table):
         """Write ``table`` as list of strings.
